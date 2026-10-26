@@ -13,6 +13,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="auth.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 
@@ -84,9 +85,9 @@
         </div>
         <span class="streak-number">3</span>
       </div>
-      <button class="profile-button" id="profile-button" aria-label="Open profile menu">
-        <span class="avatar">JD</span>
-        <span class="profile-copy"><strong>Student</strong><small>Free plan</small></span>
+      <button class="profile-button" id="profile-button" aria-label="Sign in">
+        <span class="avatar">S</span>
+        <span class="profile-copy"><strong id="account-name">Student</strong><small id="account-state">Sign in</small></span>
         <svg class="profile-chevron" viewBox="0 0 20 20" aria-hidden="true">
           <path d="m6 8 4 4 4-4" />
         </svg>
@@ -301,6 +302,25 @@
         <button class="button button-secondary" id="timer-reset">Reset</button>
       </div>
       <p class="timer-note">25 minutes of focus, then take a well-earned break.</p>
+    </section>
+  </div>
+  <div class="modal-backdrop" id="auth-modal" aria-hidden="true">
+    <section class="focus-modal auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <button class="modal-close" id="close-auth" aria-label="Close sign-in">×</button>
+      <span class="modal-eyebrow">YOUR STUDYSPACE ACCOUNT</span>
+      <h2 id="auth-title">Sign in</h2>
+      <p class="focus-description">Sign in to sync your study tasks and notes securely.</p>
+      <form id="auth-form" class="auth-form">
+        <label for="auth-email">Email</label>
+        <input id="auth-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+        <label for="auth-password">Password</label>
+        <input id="auth-password" name="password" type="password" autocomplete="current-password" minlength="8"
+          maxlength="128" required>
+        <p id="auth-message" role="status" aria-live="polite"></p>
+        <button class="button button-primary" id="auth-submit" type="submit">Sign in</button>
+      </form>
+      <button class="auth-switch" id="auth-switch" type="button">Create an account</button>
+      <button class="text-button auth-logout" id="auth-logout" type="button" hidden>Sign out</button>
     </section>
   </div>
 </body>

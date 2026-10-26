@@ -1474,6 +1474,80 @@ h1 {
   font-size: 10px;
 }
 
+.auth-modal {
+  text-align: left;
+}
+
+.auth-modal > .modal-eyebrow,
+.auth-modal > h2,
+.auth-modal > .focus-description {
+  display: block;
+  text-align: center;
+}
+
+.auth-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.auth-form label {
+  margin-top: 5px;
+  color: #6d6f81;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.auth-form input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 11px;
+  border: 1px solid #e8e8f0;
+  border-radius: 8px;
+  background: #fcfcfe;
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.auth-form #auth-message {
+  min-height: 18px;
+  margin: 4px 0;
+  color: #6d6f81;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.auth-form #auth-message.error {
+  color: #b33f57;
+}
+
+.auth-form .button {
+  width: 100%;
+  min-height: 44px;
+}
+
+.auth-switch {
+  display: block;
+  margin: 14px auto 0;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: #7065d1;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.auth-logout {
+  display: block;
+  margin: 14px auto 0;
+}
+
+.auth-logout[hidden],
+.auth-switch[hidden],
+.auth-form[hidden] {
+  display: none;
+}
+
 body.modal-open {
   overflow: hidden;
 }

@@ -22,6 +22,7 @@ const noteStatus = document.querySelector("#note-status");
 const sidebarBackdrop = document.querySelector("#sidebar-backdrop");
 
 const TASKS_STORAGE_KEY = "studyspace-tasks";
+const TASKS_OWNER_KEY = "studyspace-tasks-owner";
 const TASK_REMINDER_INTERVAL_MS = 15_000;
 const starterTasks = [
   { title: "Review lecture notes", subject: "Biology", duration: 30, time: "9:00 AM", completed: true },
@@ -38,6 +39,7 @@ let timerInterval = null;
 let previousFocus = null;
 const chatHistory = [];
 let studyTasks = loadStudyTasks();
+let connectedAccountId = null;
 
 function showToast(message) {
   toast.textContent = message;
@@ -84,6 +86,108 @@ function saveStudyTasks() {
   } catch (error) {
     showToast("Tasks changed, but your browser could not save them.");
     console.error("Unable to save study tasks.", error);
+  }
+}
+
+function showCloudSyncError(error, item) {
+  showToast(`${item} saved on this device, but cloud sync failed: ${error.message}`);
+  console.error(`Unable to sync ${item} with Supabase.`, error);
+}
+
+async function saveTaskToCloud(task) {
+  if (!connectedAccountId) return;
+  try {
+    await window.studyspaceAuth.request("/api/tasks", {
+      method: "POST",
+      body: JSON.stringify({ task }),
+    });
+  } catch (error) {
+    showCloudSyncError(error, "Task");
+  }
+}
+
+async function updateTaskInCloud(taskId, updates) {
+  if (!connectedAccountId) return;
+  try {
+    await window.studyspaceAuth.request(`/api/tasks/${encodeURIComponent(taskId)}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+    });
+  } catch (error) {
+    showCloudSyncError(error, "Task");
+  }
+}
+
+async function deleteTaskFromCloud(taskId) {
+  if (!connectedAccountId) return;
+  try {
+    await window.studyspaceAuth.request(`/api/tasks/${encodeURIComponent(taskId)}`, {
+      method: "DELETE",
+    });
+  } catch (error) {
+    showCloudSyncError(error, "Task");
+  }
+}
+
+async function syncAccountData(user) {
+  if (!user || connectedAccountId === user.id) return;
+  connectedAccountId = user.id;
+  try {
+    const storedOwner = window.localStorage.getItem(TASKS_OWNER_KEY);
+    if (storedOwner && storedOwner !== user.id) {
+      studyTasks = [];
+      notesInput.value = "";
+      saveStudyTasks();
+      window.localStorage.removeItem("studyspace-notes");
+    }
+
+    const localTasks = studyTasks.map((task) => ({ ...task }));
+    const localNotes = notesInput.value;
+    const [{ tasks: cloudTasks }, cloudNotes] = await Promise.all([
+      window.studyspaceAuth.request("/api/tasks"),
+      window.studyspaceAuth.request("/api/notes"),
+    ]);
+    if (window.studyspaceAuth.user?.id !== user.id) return;
+
+    const canImportLocal = !storedOwner || storedOwner === user.id;
+    const cloudTaskIds = new Set(cloudTasks.map((task) => task.id));
+    const tasksToImport = canImportLocal
+      ? localTasks.filter((task) => !cloudTaskIds.has(task.id))
+      : [];
+    if (tasksToImport.length) {
+      await Promise.all(tasksToImport.map((task) =>
+        window.studyspaceAuth.request("/api/tasks", {
+          method: "POST",
+          body: JSON.stringify({ task }),
+        }),
+      ));
+    }
+
+    studyTasks = [...cloudTasks, ...tasksToImport];
+    studyTasks = studyTasks.map((task) => ({
+      ...task,
+      dueAt: task.dueAt || task.due_at || null,
+      reminderSent: task.reminderSent === true || task.reminder_sent === true,
+      time: task.time || "Anytime",
+    }));
+    saveStudyTasks();
+    renderStudyTasks();
+
+    if (!cloudNotes.content && localNotes && canImportLocal) {
+      await window.studyspaceAuth.request("/api/notes", {
+        method: "PUT",
+        body: JSON.stringify({ content: localNotes }),
+      });
+    } else {
+      notesInput.value = cloudNotes.content;
+      window.localStorage.setItem("studyspace-notes", cloudNotes.content);
+    }
+    window.localStorage.setItem(TASKS_OWNER_KEY, user.id);
+    checkScheduledTaskReminders();
+    showToast("Your tasks and notes are synced to your account.");
+  } catch (error) {
+    connectedAccountId = null;
+    showCloudSyncError(error, "Account data");
   }
 }
 
@@ -207,6 +311,7 @@ function checkScheduledTaskReminders() {
   for (const task of dueTasks) {
     task.reminderSent = true;
     notifyUser("Study task reminder", `${task.title} is scheduled for now.`, `task-reminder-${task.id}`);
+    void updateTaskInCloud(task.id, { reminderSent: true });
   }
   saveStudyTasks();
 }
@@ -275,6 +380,17 @@ notesInput.addEventListener("input", () => {
     try {
       window.localStorage.setItem("studyspace-notes", notesInput.value);
       noteStatus.textContent = "Saved";
+      if (window.studyspaceAuth?.user) {
+        window.studyspaceAuth.request("/api/notes", {
+          method: "PUT",
+          body: JSON.stringify({ content: notesInput.value }),
+        }).then(() => {
+          noteStatus.textContent = "Saved to your account";
+        }).catch((error) => {
+          noteStatus.textContent = "Saved on this device only";
+          showCloudSyncError(error, "Notes");
+        });
+      }
     } catch (error) {
       noteStatus.textContent = "Not saved";
       showToast("Your notes could not be saved in this browser.");
@@ -284,6 +400,19 @@ notesInput.addEventListener("input", () => {
 });
 
 renderStudyTasks();
+window.studyspaceAuth.ready.then((user) => {
+  if (user) return syncAccountData(user);
+  return null;
+}).catch((error) => {
+  showCloudSyncError(error, "Account data");
+});
+window.addEventListener("studyspace:authchange", (event) => {
+  if (event.detail.user) {
+    void syncAccountData(event.detail.user);
+  } else {
+    connectedAccountId = null;
+  }
+});
 updateNotificationStatus();
 checkScheduledTaskReminders();
 window.setInterval(checkScheduledTaskReminders, TASK_REMINDER_INTERVAL_MS);
@@ -300,6 +429,7 @@ taskList.addEventListener("change", (event) => {
   task.completed = event.target.checked;
   saveStudyTasks();
   renderStudyTasks();
+  void updateTaskInCloud(task.id, { completed: task.completed });
   if (task.completed) {
     notifyUser("Task completed", `Great work finishing ${task.title}.`, `task-complete-${task.id}`);
   } else {
@@ -315,6 +445,7 @@ taskList.addEventListener("click", (event) => {
   studyTasks = studyTasks.filter((task) => task.id !== removeButton.dataset.taskDelete);
   saveStudyTasks();
   renderStudyTasks();
+  void deleteTaskFromCloud(removeButton.dataset.taskDelete);
 });
 
 taskForm.addEventListener("submit", (event) => {
@@ -338,7 +469,7 @@ taskForm.addEventListener("submit", (event) => {
     return;
   }
 
-  studyTasks.push({
+  const task = {
     id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     title,
     subject: "",
@@ -347,9 +478,11 @@ taskForm.addEventListener("submit", (event) => {
     dueAt: dueAt ? dueAt.toISOString() : null,
     reminderSent: false,
     completed: false,
-  });
+  };
+  studyTasks.push(task);
   saveStudyTasks();
   renderStudyTasks();
+  void saveTaskToCloud(task);
   taskForm.reset();
   taskInput.focus();
   showToast("Study task added to your plan.");
@@ -510,6 +643,7 @@ document.querySelector("#sidebar-assistant").addEventListener("click", () => {
 });
 
 document.querySelector("#clear-completed-tasks").addEventListener("click", () => {
+  const completedTasks = studyTasks.filter((task) => task.completed);
   const incompleteTasks = studyTasks.filter((task) => !task.completed);
   if (incompleteTasks.length === studyTasks.length) {
     showToast("There are no completed tasks to clear.");
@@ -519,6 +653,9 @@ document.querySelector("#clear-completed-tasks").addEventListener("click", () =>
   studyTasks = incompleteTasks;
   saveStudyTasks();
   renderStudyTasks();
+  for (const task of completedTasks) {
+    void deleteTaskFromCloud(task.id);
+  }
   showToast("Completed tasks cleared.");
 });
 document.querySelector("#week-selector").addEventListener("click", () => showToast("Weekly activity is shown for the current week."));
@@ -530,4 +667,3 @@ document.querySelector("#notification-button").addEventListener("click", () => {
     showToast("Study task reminders are managed in your study plan.");
   }
 });
-document.querySelector("#profile-button").addEventListener("click", () => showToast("Profile settings are coming soon."));
