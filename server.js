@@ -19,6 +19,10 @@ const RATE_LIMIT_REQUESTS = 20;
 const PUBLIC_FILES = new Map([
   ["/", ["index.html", "text/html; charset=utf-8"]],
   ["/index.html", ["index.html", "text/html; charset=utf-8"]],
+  ["/login", ["login.html", "text/html; charset=utf-8"]],
+  ["/login.html", ["login.html", "text/html; charset=utf-8"]],
+  ["/register", ["register.html", "text/html; charset=utf-8"]],
+  ["/register.html", ["register.html", "text/html; charset=utf-8"]],
   ["/style.css", ["style.css", "text/css; charset=utf-8"]],
   ["/app.js", ["app.js", "text/javascript; charset=utf-8"]],
   ["/auth.js", ["auth.js", "text/javascript; charset=utf-8"]],
@@ -497,12 +501,29 @@ async function handleStatic(request, response, pathname) {
 
 const server = http.createServer(async (request, response) => {
   const pathname = new URL(request.url, "http://localhost").pathname;
-  if (
-    pathname.startsWith("/api/auth/") ||
-    pathname === "/api/tasks" ||
-    pathname.startsWith("/api/tasks/") ||
-    pathname === "/api/notes"
-  ) {
+  if (pathname === "/api/auth/social") {
+    if (request.method !== "POST") {
+      response.setHeader("Allow", "POST");
+      sendJson(response, 405, { error: "Use POST for Google or Apple sign-in." });
+      return;
+    }
+    let payload = {};
+    try {
+      payload = await readJsonBody(request, response);
+    } catch {
+      return;
+    }
+    const provider = typeof payload?.provider === "string" ? payload.provider.toLowerCase() : "";
+    if (!/^(google|apple)$/.test(provider)) {
+      sendJson(response, 400, { error: "Choose a supported provider: Google or Apple." });
+      return;
+    }
+    sendJson(response, 200, {
+      message: `The ${provider} sign-in button is ready. Connect a real OAuth provider to complete the flow.`,
+    });
+    return;
+  }
+  if (pathname.startsWith("/api/auth/") || pathname === "/api/tasks" || pathname.startsWith("/api/tasks/") || pathname === "/api/notes") {
     await handleMySqlApi(request, response, pathname);
     return;
   }

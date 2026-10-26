@@ -9,29 +9,54 @@ const authSwitch = document.querySelector("#auth-switch");
 const authLogout = document.querySelector("#auth-logout");
 const accountName = document.querySelector("#account-name");
 const accountState = document.querySelector("#account-state");
+const authPageForm = document.querySelector("#auth-page-form");
+const authPageEmail = document.querySelector("#auth-page-email");
+const authPagePassword = document.querySelector("#auth-page-password");
+const authPageMessage = document.querySelector("#auth-page-message");
+const authPageTitle = document.querySelector("#auth-page-title");
+const authPageSubmit = document.querySelector("#auth-page-submit");
+const authPageLink = document.querySelector("#auth-page-link");
+const authProviderButtons = document.querySelectorAll("[data-provider]");
 
 let currentUser = null;
-let isSignup = false;
+let isSignup = window.location.pathname.includes("/register") || document.body.dataset.authMode === "signup";
 
-function setAuthMessage(message, isError = false) {
-  authMessage.textContent = message;
-  authMessage.classList.toggle("error", isError);
+function setAuthMessage(message, isError = false, target = authMessage) {
+  if (!target) return;
+  target.textContent = message;
+  target.classList.toggle("error", isError);
 }
 
 function updateAccountUi() {
-  accountName.textContent = currentUser?.email || "Student";
-  accountState.textContent = currentUser ? "Signed in · MySQL synced" : "Sign in";
-  document.querySelector("#profile-button").setAttribute(
-    "aria-label",
-    currentUser ? "Open account options" : "Sign in to Studyspace",
-  );
-  authLogout.hidden = !currentUser;
-  authSwitch.hidden = Boolean(currentUser);
-  authForm.hidden = Boolean(currentUser);
-  authTitle.textContent = currentUser ? "Account" : isSignup ? "Create account" : "Sign in";
+  if (accountName) {
+    accountName.textContent = currentUser?.email || "Student";
+  }
+  if (accountState) {
+    accountState.textContent = currentUser ? "Signed in · MySQL synced" : "Sign in";
+  }
+  const profileButton = document.querySelector("#profile-button");
+  if (profileButton) {
+    profileButton.setAttribute(
+      "aria-label",
+      currentUser ? "Open account options" : "Sign in to Studyspace",
+    );
+  }
+  if (authLogout) {
+    authLogout.hidden = !currentUser;
+  }
+  if (authSwitch) {
+    authSwitch.hidden = Boolean(currentUser);
+  }
+  if (authForm) {
+    authForm.hidden = Boolean(currentUser);
+  }
+  if (authTitle) {
+    authTitle.textContent = currentUser ? "Account" : isSignup ? "Create account" : "Sign in";
+  }
 }
 
 function showAuthModal() {
+  if (!authModal || !authMessage) return;
   authMessage.textContent = "";
   authModal.classList.add("open");
   authModal.setAttribute("aria-hidden", "false");
@@ -44,6 +69,7 @@ function showAuthModal() {
 }
 
 function closeAuthModal() {
+  if (!authModal) return;
   authModal.classList.remove("open");
   authModal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
@@ -58,7 +84,25 @@ async function authRequest(path, options = {}) {
       ...(options.headers || {}),
     },
   });
-  const payload = await response.json();
+
+  const text = await response.text();
+  let payload = {};
+
+  if (text) {
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      console.error(`Unexpected non-JSON response from ${path}:`, text.slice(0, 220));
+      throw new Error("The server returned an unexpected HTML response. Please reload the page and try again.");
+    }
+
+    try {
+      payload = JSON.parse(text);
+    } catch (error) {
+      console.error(`Unable to parse JSON from ${path}:`, text.slice(0, 220));
+      throw new Error("The server responded with invalid JSON. Please try again.");
+    }
+  }
+
   if (!response.ok) throw new Error(payload.error || "The request could not be completed.");
   return payload;
 }
@@ -83,64 +127,140 @@ async function loadCurrentUser() {
   return currentUser;
 }
 
-authForm.addEventListener("submit", async (event) => {
+async function handleAuthSubmit(event, modeOverride) {
+  const mode = modeOverride ?? isSignup;
+  const emailInput = authPageEmail || authEmail;
+  const passwordInput = authPagePassword || authPassword;
+  const messageTarget = authPageMessage || authMessage;
+  const submitButton = authPageSubmit || authSubmit;
   event.preventDefault();
-  const email = authEmail.value.trim();
-  const password = authPassword.value;
-  authSubmit.disabled = true;
-  authSubmit.textContent = isSignup ? "Creating account..." : "Signing in...";
-  setAuthMessage("");
+
+  const email = (emailInput.value || "").trim();
+  const password = passwordInput.value;
+  submitButton.disabled = true;
+  submitButton.textContent = mode ? "Creating account..." : "Signing in...";
+  setAuthMessage("", false, messageTarget);
+
   try {
-    const payload = await authRequest(`/api/auth/${isSignup ? "signup" : "login"}`, {
+    const payload = await authRequest(`/api/auth/${mode ? "signup" : "login"}`, {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
     if (payload.confirmationRequired) {
-      setAuthMessage(payload.message);
+      setAuthMessage(payload.message, false, messageTarget);
       return;
     }
     setCurrentUser(payload.user);
-    authPassword.value = "";
+    passwordInput.value = "";
+
+    if (authPageForm) {
+      window.location.href = "/";
+      return;
+    }
     closeAuthModal();
   } catch (error) {
-    setAuthMessage(error.message, true);
+    setAuthMessage(error.message, true, messageTarget);
   } finally {
-    authSubmit.disabled = false;
+    submitButton.disabled = false;
+    submitButton.textContent = mode ? "Create account" : "Sign in";
+  }
+}
+
+function configurePageAuth(mode) {
+  if (!authPageForm || !authPageLink || !authPageTitle || !authPageSubmit || !authPageMessage) return;
+  const signupMode = mode === "signup";
+  authPageTitle.textContent = signupMode ? "Create your account" : "Welcome back";
+  authPageSubmit.textContent = signupMode ? "Create account" : "Sign in";
+  authPageLink.textContent = signupMode ? "Already have an account? Sign in" : "Need an account? Create one";
+  authPageLink.href = signupMode ? "/login" : "/register";
+  authPageMessage.textContent = "";
+  authPageMessage.classList.remove("error");
+}
+
+function bindProviderButtons() {
+  authProviderButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      const provider = button.dataset.provider;
+      const target = button.closest("form")?.querySelector(".auth-message") || authPageMessage || authMessage;
+      try {
+        const payload = await authRequest("/api/auth/social", {
+          method: "POST",
+          body: JSON.stringify({ provider }),
+        });
+        setAuthMessage(payload.message || `Continue with ${provider}.`, false, target);
+      } catch (error) {
+        setAuthMessage(error.message, true, target);
+      }
+    });
+  });
+}
+
+if (authForm) {
+  authForm.addEventListener("submit", (event) => handleAuthSubmit(event, isSignup));
+}
+
+if (authPageForm) {
+  configurePageAuth(isSignup ? "signup" : "login");
+  authPageForm.addEventListener("submit", (event) => handleAuthSubmit(event, isSignup));
+  authPageLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    isSignup = !isSignup;
+    configurePageAuth(isSignup ? "signup" : "login");
+    const passwordInput = authPagePassword;
+    if (passwordInput) {
+      passwordInput.autocomplete = isSignup ? "new-password" : "current-password";
+    }
+    window.location.href = isSignup ? "/register" : "/login";
+  });
+}
+
+if (authSwitch) {
+  authSwitch.addEventListener("click", () => {
+    isSignup = !isSignup;
+    authPassword.autocomplete = isSignup ? "new-password" : "current-password";
+    authSwitch.textContent = isSignup ? "Already have an account? Sign in" : "Create an account";
     authSubmit.textContent = isSignup ? "Create account" : "Sign in";
-  }
-});
+    updateAccountUi();
+    setAuthMessage("");
+  });
+}
 
-authSwitch.addEventListener("click", () => {
-  isSignup = !isSignup;
-  authPassword.autocomplete = isSignup ? "new-password" : "current-password";
-  authSwitch.textContent = isSignup ? "Already have an account? Sign in" : "Create an account";
-  authSubmit.textContent = isSignup ? "Create account" : "Sign in";
-  updateAccountUi();
-  setAuthMessage("");
-});
+if (authLogout) {
+  authLogout.addEventListener("click", async () => {
+    authLogout.disabled = true;
+    try {
+      await authRequest("/api/auth/logout", { method: "POST", body: "{}" });
+      setCurrentUser(null);
+      closeAuthModal();
+    } catch (error) {
+      setAuthMessage(error.message, true);
+    } finally {
+      authLogout.disabled = false;
+    }
+  });
+}
 
-authLogout.addEventListener("click", async () => {
-  authLogout.disabled = true;
-  try {
-    await authRequest("/api/auth/logout", { method: "POST", body: "{}" });
-    setCurrentUser(null);
-    closeAuthModal();
-  } catch (error) {
-    setAuthMessage(error.message, true);
-  } finally {
-    authLogout.disabled = false;
-  }
-});
+const profileButton = document.querySelector("#profile-button");
+if (profileButton) {
+  profileButton.addEventListener("click", showAuthModal);
+}
 
-document.querySelector("#profile-button").addEventListener("click", showAuthModal);
-document.querySelector("#close-auth").addEventListener("click", closeAuthModal);
-authModal.addEventListener("click", (event) => {
-  if (event.target === authModal) closeAuthModal();
-});
+const closeAuthButton = document.querySelector("#close-auth");
+if (closeAuthButton) {
+  closeAuthButton.addEventListener("click", closeAuthModal);
+}
+
+if (authModal) {
+  authModal.addEventListener("click", (event) => {
+    if (event.target === authModal) closeAuthModal();
+  });
+}
+
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && authModal.classList.contains("open")) closeAuthModal();
+  if (event.key === "Escape" && authModal && authModal.classList.contains("open")) closeAuthModal();
 });
 
+bindProviderButtons();
 window.studyspaceAuth = {
   get user() {
     return currentUser;

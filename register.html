@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Studyspace — Create account</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="auth.js" defer></script>
+  </head>
+  <body class="auth-page-body">
+    <div class="auth-page-shell">
+      <div class="auth-page-card">
+        <div class="auth-page-header">
+          <a href="/" class="brand-inline" aria-label="Back to Studyspace home">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none">
+                <path d="M7 8.5c3.7-.9 6.7-.5 9 1.2v14c-2.3-1.7-5.3-2.1-9-1.2v-14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                <path d="M25 8.5c-3.7-.9-6.7-.5-9 1.2v14c2.3-1.7 5.3-2.1 9-1.2v-14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+              </svg>
+            </span>
+            <span>studyspace<span class="brand-period">.</span></span>
+          </a>
+          <span class="auth-tag">Join now</span>
+        </div>
+
+        <h1 id="auth-page-title">Create your account</h1>
+        <p class="auth-page-copy">Track your tasks, save notes, and stay consistent with your study plan.</p>
+
+        <div class="auth-provider-grid">
+          <button class="auth-provider-button" type="button" data-provider="google">
+            <span class="provider-icon">G</span>
+            Sign up with Google
+          </button>
+          <button class="auth-provider-button" type="button" data-provider="apple">
+            <span class="provider-icon"></span>
+            Sign up with Apple
+          </button>
+        </div>
+
+        <div class="auth-divider"><span>or create with email</span></div>
+
+        <form id="auth-page-form" class="auth-page-form">
+          <label for="auth-page-email">Email</label>
+          <input id="auth-page-email" name="email" type="email" autocomplete="email" maxlength="254" required />
+
+          <label for="auth-page-password">Password</label>
+          <input id="auth-page-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required />
+
+          <p id="auth-page-message" class="auth-message" role="status" aria-live="polite"></p>
+
+          <button id="auth-page-submit" class="button button-primary auth-page-submit" type="submit">Create account</button>
+        </form>
+
+        <p class="auth-page-switch">
+          Already have an account? <a id="auth-page-link" href="/login">Sign in</a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
