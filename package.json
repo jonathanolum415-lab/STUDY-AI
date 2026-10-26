@@ -1,0 +1,12 @@
+{
+  "name": "studyspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Studyspace dashboard and AI chat backend",
+  "engines": {
+    "node": ">=20.6"
+  },
+  "scripts": {
+    "start": "node --env-file=.env server.js"
+  }
+}

@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8fc">
+  <meta name="description" content="Your calm, focused space for learning.">
+  <title>Studyspace — Your study companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#" aria-label="Studyspace home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M7 8.5c3.7-.9 6.7-.5 9 1.2v14c-2.3-1.7-5.3-2.1-9-1.2v-14Z" stroke="currentColor" stroke-width="2"
+              stroke-linejoin="round" />
+            <path d="M25 8.5c-3.7-.9-6.7-.5-9 1.2v14c2.3-1.7 5.3-2.1 9-1.2v-14Z" stroke="currentColor" stroke-width="2"
+              stroke-linejoin="round" />
+          </svg>
+        </span>
+        <span>studyspace<span class="brand-period">.</span></span>
+      </a>
+
+      <div class="sidebar-label">MENU</div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a class="nav-link active" href="#overview" data-view="overview">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="8" height="8" rx="2" />
+            <rect x="13" y="3" width="8" height="5" rx="2" />
+            <rect x="13" y="10" width="8" height="11" rx="2" />
+            <rect x="3" y="13" width="8" height="8" rx="2" />
+          </svg>
+          <span>Overview</span>
+        </a>
+        <a class="nav-link" href="#study-planner" data-view="study-planner">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="3" />
+            <path d="M16 3v4M8 3v4M3 10h18" />
+          </svg>
+          <span>Study planner</span>
+        </a>
+        <a class="nav-link" href="#my-notes" data-view="my-notes">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
+            <path d="M14 3v6h5M9 14h6M9 17h6" />
+          </svg>
+          <span>My notes</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-label tools-label">YOUR TOOLS</div>
+      <button class="nav-link nav-button" id="sidebar-focus">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="13" r="8" />
+          <path d="M12 9v4l2.5 1.5M9 2h6M12 2v3" />
+        </svg>
+        <span>Focus timer</span>
+      </button>
+      <button class="nav-link nav-button" id="sidebar-assistant">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3a7 7 0 0 0-4 12.7V19h8v-3.3A7 7 0 0 0 12 3Z" />
+          <path d="M9 22h6M9 11l2 2 4-4" />
+        </svg>
+        <span>Study assistant</span>
+        <span class="sparkle">✦</span>
+      </button>
+
+      <div class="sidebar-spacer"></div>
+      <div class="streak-card">
+        <span class="streak-icon" aria-hidden="true">✳</span>
+        <div>
+          <strong>You're on a roll!</strong>
+          <p>3 day study streak</p>
+        </div>
+        <span class="streak-number">3</span>
+      </div>
+      <button class="profile-button" id="profile-button" aria-label="Open profile menu">
+        <span class="avatar">JD</span>
+        <span class="profile-copy"><strong>Student</strong><small>Free plan</small></span>
+        <svg class="profile-chevron" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="m6 8 4 4 4-4" />
+        </svg>
+      </button>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobile-menu" aria-label="Open navigation" aria-controls="sidebar"
+          aria-expanded="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
+        <div class="breadcrumb"><span>Pages</span><span class="breadcrumb-slash">/</span><strong
+            id="breadcrumb-current">Overview</strong></div>
+        <div class="topbar-actions">
+          <div class="date-chip"><svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="3" />
+              <path d="M16 3v4M8 3v4M3 10h18" />
+            </svg><span id="today-date"></span></div>
+          <button class="icon-button notification-button" id="notification-button" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
+            </svg>
+            <span class="notification-dot"></span>
+          </button>
+        </div>
+      </header>
+
+      <div class="content-wrap" id="overview">
+        <section class="welcome-row">
+          <div>
+            <p class="eyebrow">MONDAY, YOUR WAY</p>
+            <h1>Good morning <span class="wave" aria-hidden="true">✦</span></h1>
+            <p class="welcome-copy">A little progress each day adds up to big results.</p>
+          </div>
+          <button class="button button-primary" id="start-focus">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 8v4l2.5 1.5M9 2h6M12 2v3" />
+              <circle cx="12" cy="13" r="8" />
+            </svg>
+            Start a focus session
+          </button>
+        </section>
+
+        <section class="stat-grid" aria-label="Study statistics">
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">Study time</span><span class="stat-icon lavender"><svg
+                  viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5l3 2" />
+                </svg></span></div>
+            <div class="stat-value"><strong>12.5</strong><span>hrs</span><span class="stat-change">↑ 12%</span></div>
+            <p class="stat-foot">vs. last week</p>
+            <div class="mini-bars" aria-label="Weekly study time chart"><i style="--bar:42%"></i><i
+                style="--bar:65%"></i><i style="--bar:48%"></i><i style="--bar:83%"></i><i style="--bar:58%"></i><i
+                style="--bar:100%"></i><i style="--bar:70%"></i></div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">Tasks completed</span><span class="stat-icon mint"><svg
+                  viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m5 12 4 4L19 6" />
+                  <circle cx="12" cy="12" r="9" />
+                </svg></span></div>
+            <div class="stat-value"><strong id="task-stat">0</strong><span>/ <span id="task-total">0</span></span><span
+                class="stat-change" id="task-percent">0%</span></div>
+            <p class="stat-foot" id="task-progress-label">No tasks completed yet</p>
+            <div class="progress-track" role="progressbar" aria-label="Study plan completion" aria-valuemin="0"
+              aria-valuemax="100" aria-valuenow="0" id="task-progress-track"><span id="task-progress"></span></div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">Current streak</span><span class="stat-icon peach"><svg
+                  viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M12 22c4.4 0 7-3 7-7 0-2.7-1.2-4.7-3.5-7-.1 2-1 3.2-2.2 3.8C13.8 7.2 11.9 3.8 8 2c.4 4.5-3 6.8-3 12a8 8 0 0 0 7 8Z" />
+                </svg></span></div>
+            <div class="stat-value"><strong>3</strong><span>days</span><span class="stat-change">Best: 7</span></div>
+            <p class="stat-foot">One more day to beat your record</p>
+            <div class="streak-dots" aria-label="Three day streak"><i class="filled"></i><i class="filled"></i><i
+                class="filled"></i><i></i><i></i><i></i><i></i></div>
+          </article>
+        </section>
+
+        <section class="main-grid">
+          <div class="left-column">
+            <article class="panel schedule-panel" id="study-planner">
+              <div class="panel-heading">
+                <div>
+                  <h2>Today's study plan</h2>
+                  <p class="panel-subtitle">Stay on track, one task at a time.</p>
+                </div>
+                <button class="text-button" id="clear-completed-tasks">Clear completed</button>
+              </div>
+              <div class="task-list" id="task-list" aria-label="Study tasks"></div>
+              <form class="task-form" id="task-form">
+                <label class="visually-hidden" for="task-input">New study task</label>
+                <input id="task-input" name="task" type="text" maxlength="120" placeholder="Add a study task..."
+                  autocomplete="off" required>
+                <button class="add-task-button" type="submit"><span aria-hidden="true">+</span> Add task</button>
+              </form>
+            </article>
+
+            <article class="panel notes-panel" id="my-notes">
+              <div class="panel-heading">
+                <div>
+                  <h2>My notes</h2>
+                  <p class="panel-subtitle">Your notes are saved on this device.</p>
+                </div>
+                <span class="note-status" id="note-status" role="status" aria-live="polite">Ready</span>
+              </div>
+              <label class="visually-hidden" for="notes-input">Personal study notes</label>
+              <textarea id="notes-input" class="notes-input" placeholder="Write down an idea, reminder, or note..."
+                rows="6"></textarea>
+            </article>
+
+          </div>
+
+          <div class="right-column">
+            <article class="assistant-card" id="assistant-card">
+              <div class="assistant-glow"></div>
+              <div class="assistant-topline"><span class="assistant-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3a7 7 0 0 0-4 12.7V19h8v-3.3A7 7 0 0 0 12 3Z" />
+                    <path d="M9 22h6M9 11l2 2 4-4" />
+                  </svg></span><span class="beta-tag">YOUR STUDY BUDDY</span></div>
+              <h2>Need a hand<br>with something?</h2>
+              <p>Ask a question, get unstuck, and keep your learning momentum going.</p>
+              <div class="prompt-chips">
+                <button class="prompt-chip" data-prompt="Explain a tricky concept">Explain a concept
+                  <span>✦</span></button>
+                <button class="prompt-chip" data-prompt="Help me make a study plan">Make a study plan
+                  <span>✦</span></button>
+                <button class="prompt-chip" data-prompt="Explain [topic] briefly" data-select="[topic]">Short answer</button>
+                <button class="prompt-chip" data-prompt="Make flashcards about [topic]" data-select="[topic]">Flashcards</button>
+                <button class="prompt-chip" data-prompt="Quiz me on [topic]" data-select="[topic]">Quick quiz</button>
+              </div>
+              <div class="assistant-messages" id="assistant-messages" role="log" aria-live="polite"
+                aria-label="Study assistant conversation"></div>
+              <form class="assistant-form" id="assistant-form">
+                <label class="visually-hidden" for="assistant-input">Ask your study assistant</label>
+                <input id="assistant-input" type="text" placeholder="Ask me anything..." autocomplete="off"
+                  maxlength="4000">
+                <button type="submit" aria-label="Send question"><svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m5 12 14-7-5 14-3-6-6-1Z" />
+                    <path d="m11 13 4-4" />
+                  </svg></button>
+              </form>
+              <div class="assistant-disclaimer">AI responses are generated to support your learning.</div>
+            </article>
+
+            <article class="panel week-panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>This week</h2>
+                  <p class="panel-subtitle">Your study activity at a glance.</p>
+                </div>
+                <button class="select-button" id="week-selector" aria-label="Change chart period">This week
+                  <span>⌄</span></button>
+              </div>
+              <div class="chart-legend"><span><i></i> Study hours</span><strong>12.5h <small>this week</small></strong>
+              </div>
+              <div class="chart" role="img" aria-label="Study hours over the past seven days">
+                <div class="chart-grid"><i></i><i></i><i></i><i></i></div>
+                <div class="chart-columns">
+                  <div class="chart-column"><span style="--height:38%"></span><small>Mon</small></div>
+                  <div class="chart-column"><span style="--height:61%"></span><small>Tue</small></div>
+                  <div class="chart-column"><span style="--height:47%"></span><small>Wed</small></div>
+                  <div class="chart-column"><span style="--height:82%"></span><small>Thu</small></div>
+                  <div class="chart-column"><span style="--height:54%"></span><small>Fri</small></div>
+                  <div class="chart-column"><span class="today-bar" style="--height:94%"></span><small
+                      class="today-label">Sat</small></div>
+                  <div class="chart-column"><span style="--height:22%"></span><small>Sun</small></div>
+                </div>
+              </div>
+            </article>
+            <article class="quote-card">
+              <span class="quote-mark">“</span>
+              <p>It always seems impossible until it's done.</p>
+              <span class="quote-author">NELSON MANDELA</span>
+              <span class="quote-decoration" aria-hidden="true">✳</span>
+            </article>
+          </div>
+        </section>
+
+        <footer class="page-footer"><span>Made for your next big idea.</span><span>Take it one page at a time <span
+              class="footer-heart">♡</span></span></footer>
+      </div>
+    </main>
+  </div>
+
+  <button class="sidebar-backdrop" id="sidebar-backdrop" aria-label="Close navigation" tabindex="-1"></button>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal-backdrop" id="focus-modal" aria-hidden="true">
+    <section class="focus-modal" role="dialog" aria-modal="true" aria-labelledby="focus-title">
+      <button class="modal-close" id="close-focus" aria-label="Close focus timer">×</button>
+      <span class="modal-eyebrow">A LITTLE SPACE TO FOCUS</span>
+      <h2 id="focus-title">Focus session</h2>
+      <p class="focus-description">One thing at a time. You've got this.</p>
+      <div class="timer-display" id="timer-display">25:00</div>
+      <div class="timer-controls">
+        <button class="button button-primary" id="timer-toggle">Start focusing</button>
+        <button class="button button-secondary" id="timer-reset">Reset</button>
+      </div>
+      <p class="timer-note">25 minutes of focus, then take a well-earned break.</p>
+    </section>
+  </div>
+</body>
+
+</html>
