@@ -90,8 +90,8 @@ function saveStudyTasks() {
 }
 
 function showCloudSyncError(error, item) {
-  showToast(`${item} saved on this device, but cloud sync failed: ${error.message}`);
-  console.error(`Unable to sync ${item} with Supabase.`, error);
+  showToast(`${item} saved on this device, but database sync failed: ${error.message}`);
+  console.error(`Unable to sync ${item} with MySQL.`, error);
 }
 
 async function saveTaskToCloud(task) {
@@ -184,7 +184,7 @@ async function syncAccountData(user) {
     }
     window.localStorage.setItem(TASKS_OWNER_KEY, user.id);
     checkScheduledTaskReminders();
-    showToast("Your tasks and notes are synced to your account.");
+    showToast("Your tasks and notes are synced to MySQL.");
   } catch (error) {
     connectedAccountId = null;
     showCloudSyncError(error, "Account data");
@@ -411,6 +411,11 @@ window.addEventListener("studyspace:authchange", (event) => {
     void syncAccountData(event.detail.user);
   } else {
     connectedAccountId = null;
+    studyTasks = [];
+    saveStudyTasks();
+    renderStudyTasks();
+    notesInput.value = "";
+    window.localStorage.removeItem("studyspace-notes");
   }
 });
 updateNotificationStatus();

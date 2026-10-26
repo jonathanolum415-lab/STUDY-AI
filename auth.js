@@ -20,7 +20,7 @@ function setAuthMessage(message, isError = false) {
 
 function updateAccountUi() {
   accountName.textContent = currentUser?.email || "Student";
-  accountState.textContent = currentUser ? "Signed in · synced" : "Sign in";
+  accountState.textContent = currentUser ? "Signed in · MySQL synced" : "Sign in";
   document.querySelector("#profile-button").setAttribute(
     "aria-label",
     currentUser ? "Open account options" : "Sign in to Studyspace",
@@ -116,7 +116,7 @@ authSwitch.addEventListener("click", () => {
   authSwitch.textContent = isSignup ? "Already have an account? Sign in" : "Create an account";
   authSubmit.textContent = isSignup ? "Create account" : "Sign in";
   updateAccountUi();
-  setAuthMessage(isSignup ? "Use an email you can access to confirm your account." : "");
+  setAuthMessage("");
 });
 
 authLogout.addEventListener("click", async () => {
