@@ -21,6 +21,8 @@ Studyspace is a static HTML, CSS, and JavaScript study dashboard served by a sma
 
 The app includes an offline fallback study assistant, so chat remains available when no API key is configured, the provider is unavailable, or the account is rate-limited. The fallback recognizes a selection of common topics in biology, mathematics, chemistry, physics, history, English, and programming. It can give concise explanations, examples, flashcards, and one-question-at-a-time quizzes; its offline topic coverage is limited, so use a configured provider for open-ended questions outside those topics. Study plan tasks and personal notes are saved in the current browser on the current device. Task completion counts and the progress bar update automatically as you add, complete, or remove tasks.
 
+Tasks can have an optional scheduled date and time. Studyspace shows in-app reminders while open, including a completion confirmation and a reminder when a scheduled task is due. Enable browser notifications in the study plan for desktop alerts. The page must remain open for scheduled reminders; alerts are not delivered while the browser is closed.
+
 The server uses Node's built-in modules and does not require an `npm install` step. Keep `.env` private; it is excluded by `.gitignore`. For deployment beyond a personal local demo, add user authentication and provider-appropriate abuse and usage controls before exposing the chat endpoint publicly.
 
 ## Upload to GitHub

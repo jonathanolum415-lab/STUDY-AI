@@ -183,11 +183,21 @@
               </div>
               <div class="task-list" id="task-list" aria-label="Study tasks"></div>
               <form class="task-form" id="task-form">
-                <label class="visually-hidden" for="task-input">New study task</label>
-                <input id="task-input" name="task" type="text" maxlength="120" placeholder="Add a study task..."
-                  autocomplete="off" required>
-                <button class="add-task-button" type="submit"><span aria-hidden="true">+</span> Add task</button>
+                <div class="task-form-main">
+                  <label class="visually-hidden" for="task-input">New study task</label>
+                  <input id="task-input" name="task" type="text" maxlength="120" placeholder="Add a study task..."
+                    autocomplete="off" required>
+                  <button class="add-task-button" type="submit"><span aria-hidden="true">+</span> Add task</button>
+                </div>
+                <div class="task-form-schedule">
+                  <label for="task-due-at">Schedule reminder (optional)</label>
+                  <input id="task-due-at" name="dueAt" type="datetime-local">
+                </div>
               </form>
+              <div class="notification-settings">
+                <p id="notification-status" role="status" aria-live="polite">In-app reminders are active.</p>
+                <button class="text-button" id="enable-notifications" type="button">Enable browser notifications</button>
+              </div>
             </article>
 
             <article class="panel notes-panel" id="my-notes">

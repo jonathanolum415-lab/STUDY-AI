@@ -8,6 +8,9 @@ const taskProgressTrack = document.querySelector("#task-progress-track");
 const taskProgressLabel = document.querySelector("#task-progress-label");
 const taskForm = document.querySelector("#task-form");
 const taskInput = document.querySelector("#task-input");
+const taskDueAtInput = document.querySelector("#task-due-at");
+const notificationStatus = document.querySelector("#notification-status");
+const enableNotificationsButton = document.querySelector("#enable-notifications");
 const focusModal = document.querySelector("#focus-modal");
 const timerDisplay = document.querySelector("#timer-display");
 const timerToggle = document.querySelector("#timer-toggle");
@@ -19,6 +22,7 @@ const noteStatus = document.querySelector("#note-status");
 const sidebarBackdrop = document.querySelector("#sidebar-backdrop");
 
 const TASKS_STORAGE_KEY = "studyspace-tasks";
+const TASK_REMINDER_INTERVAL_MS = 15_000;
 const starterTasks = [
   { title: "Review lecture notes", subject: "Biology", duration: 30, time: "9:00 AM", completed: true },
   { title: "Complete problem set 4", subject: "Mathematics", duration: 45, time: "10:00 AM", completed: true },
@@ -55,13 +59,18 @@ function loadStudyTasks() {
         typeof task.id !== "string" ||
         typeof task.title !== "string" ||
         typeof task.completed !== "boolean" ||
-        typeof task.duration !== "number" ||
-        typeof task.time !== "string",
+        !Number.isFinite(task.duration) ||
+        typeof task.time !== "string" ||
+        (task.dueAt != null && (typeof task.dueAt !== "string" || !Number.isFinite(Date.parse(task.dueAt)))),
       )
     ) {
       throw new Error("Saved study tasks have an invalid format.");
     }
-    return parsedTasks;
+    return parsedTasks.map((task) => ({
+      ...task,
+      dueAt: task.dueAt || null,
+      reminderSent: task.reminderSent === true,
+    }));
   } catch (error) {
     showToast("Saved study tasks could not be loaded. The starter plan is shown instead.");
     console.error("Unable to load saved study tasks.", error);
@@ -126,7 +135,10 @@ function renderStudyTasks() {
 
     const time = document.createElement("span");
     time.className = "task-time";
-    time.textContent = task.time || "Anytime";
+    time.textContent = task.dueAt
+      ? new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" })
+        .format(new Date(task.dueAt))
+      : task.time || "Anytime";
 
     const removeButton = document.createElement("button");
     removeButton.type = "button";
@@ -146,6 +158,78 @@ function setTimerDisplay() {
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
   timerDisplay.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function updateNotificationStatus() {
+  if (!window.isSecureContext || !("Notification" in window)) {
+    notificationStatus.textContent = "In-app reminders are active. Browser notifications are unavailable here.";
+    enableNotificationsButton.disabled = true;
+    return;
+  }
+
+  switch (Notification.permission) {
+    case "granted":
+      notificationStatus.textContent = "Browser notifications are enabled. Keep this page open for scheduled reminders.";
+      enableNotificationsButton.textContent = "Notifications enabled";
+      enableNotificationsButton.disabled = true;
+      break;
+    case "denied":
+      notificationStatus.textContent = "Browser notifications are blocked. Allow them for this site in your browser settings.";
+      enableNotificationsButton.textContent = "Notifications blocked";
+      enableNotificationsButton.disabled = true;
+      break;
+    default:
+      notificationStatus.textContent = "In-app reminders are active. Enable browser notifications for desktop alerts.";
+      enableNotificationsButton.textContent = "Enable browser notifications";
+      enableNotificationsButton.disabled = false;
+  }
+}
+
+function notifyUser(title, message, tag) {
+  showToast(`${title}: ${message}`);
+  if (!window.isSecureContext || !("Notification" in window) || Notification.permission !== "granted") return;
+
+  try {
+    new Notification(title, { body: message, tag });
+  } catch (error) {
+    console.error("Unable to display a browser notification.", error);
+    notificationStatus.textContent = "In-app reminder shown; browser notification could not be displayed.";
+  }
+}
+
+function checkScheduledTaskReminders() {
+  const now = Date.now();
+  const dueTasks = studyTasks.filter(
+    (task) => !task.completed && !task.reminderSent && task.dueAt && Date.parse(task.dueAt) <= now,
+  );
+  if (dueTasks.length === 0) return;
+
+  for (const task of dueTasks) {
+    task.reminderSent = true;
+    notifyUser("Study task reminder", `${task.title} is scheduled for now.`, `task-reminder-${task.id}`);
+  }
+  saveStudyTasks();
+}
+
+async function requestBrowserNotifications() {
+  if (!window.isSecureContext || !("Notification" in window)) {
+    updateNotificationStatus();
+    showToast("Browser notifications are unavailable here; in-app reminders still work.");
+    return;
+  }
+
+  try {
+    const permission = await Notification.requestPermission();
+    updateNotificationStatus();
+    if (permission === "granted") {
+      showToast("Browser notifications enabled for study reminders.");
+    } else if (permission === "denied") {
+      showToast("Notifications were blocked. You can change this in browser site settings.");
+    }
+  } catch (error) {
+    notificationStatus.textContent = "Unable to request browser notification permission.";
+    console.error("Unable to request browser notification permission.", error);
+  }
 }
 
 function stopTimer() {
@@ -200,6 +284,13 @@ notesInput.addEventListener("input", () => {
 });
 
 renderStudyTasks();
+updateNotificationStatus();
+checkScheduledTaskReminders();
+window.setInterval(checkScheduledTaskReminders, TASK_REMINDER_INTERVAL_MS);
+
+enableNotificationsButton.addEventListener("click", async () => {
+  await requestBrowserNotifications();
+});
 
 taskList.addEventListener("change", (event) => {
   if (!(event.target instanceof HTMLInputElement) || event.target.type !== "checkbox") return;
@@ -209,6 +300,11 @@ taskList.addEventListener("change", (event) => {
   task.completed = event.target.checked;
   saveStudyTasks();
   renderStudyTasks();
+  if (task.completed) {
+    notifyUser("Task completed", `Great work finishing ${task.title}.`, `task-complete-${task.id}`);
+  } else {
+    showToast(`Task reopened: ${task.title}.`);
+  }
 });
 
 taskList.addEventListener("click", (event) => {
@@ -229,12 +325,27 @@ taskForm.addEventListener("submit", (event) => {
     return;
   }
 
+  const dueValue = taskDueAtInput.value;
+  const dueAt = dueValue ? new Date(dueValue) : null;
+  if (dueValue && (!dueAt || Number.isNaN(dueAt.getTime()))) {
+    showToast("Choose a valid date and time for this reminder.");
+    taskDueAtInput.focus();
+    return;
+  }
+  if (dueAt && dueAt.getTime() <= Date.now()) {
+    showToast("Choose a reminder time in the future.");
+    taskDueAtInput.focus();
+    return;
+  }
+
   studyTasks.push({
     id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     title,
     subject: "",
     duration: 25,
     time: "Anytime",
+    dueAt: dueAt ? dueAt.toISOString() : null,
+    reminderSent: false,
     completed: false,
   });
   saveStudyTasks();
@@ -249,6 +360,12 @@ window.addEventListener("storage", (event) => {
 
   studyTasks = loadStudyTasks();
   renderStudyTasks();
+  checkScheduledTaskReminders();
+});
+
+window.addEventListener("focus", checkScheduledTaskReminders);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") checkScheduledTaskReminders();
 });
 
 document.querySelector("#start-focus").addEventListener("click", openFocusModal);
@@ -405,5 +522,12 @@ document.querySelector("#clear-completed-tasks").addEventListener("click", () =>
   showToast("Completed tasks cleared.");
 });
 document.querySelector("#week-selector").addEventListener("click", () => showToast("Weekly activity is shown for the current week."));
-document.querySelector("#notification-button").addEventListener("click", () => showToast("You're all caught up — no new notifications."));
+document.querySelector("#notification-button").addEventListener("click", () => {
+  document.querySelector("#study-planner").scrollIntoView({ behavior: "smooth", block: "center" });
+  if ("Notification" in window && Notification.permission === "default") {
+    requestBrowserNotifications();
+  } else {
+    showToast("Study task reminders are managed in your study plan.");
+  }
+});
 document.querySelector("#profile-button").addEventListener("click", () => showToast("Profile settings are coming soon."));

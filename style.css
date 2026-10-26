@@ -854,10 +854,16 @@ h1 {
 }
 
 .task-form {
+  display: grid;
+  gap: 11px;
+  margin-top: 12px;
+}
+
+.task-form-main {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 12px;
+  min-width: 0;
 }
 
 .task-form input {
@@ -875,6 +881,53 @@ h1 {
 
 .task-form input::placeholder {
   color: #aeb0bc;
+}
+
+.task-form-schedule {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+
+.task-form-schedule label {
+  color: #858899;
+  font-size: 10px;
+}
+
+.task-form-schedule input {
+  flex: 0 1 210px;
+  min-height: 36px;
+  padding-right: 8px;
+  font-size: 11px;
+}
+
+.notification-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 11px;
+  border-top: 1px solid #f4f4f7;
+}
+
+.notification-settings p {
+  flex: 1 1 180px;
+  margin: 0;
+  color: #9093a5;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.notification-settings .text-button {
+  min-height: 36px;
+  padding: 6px 8px;
+}
+
+.notification-settings .text-button:disabled {
+  color: #9093a5;
+  cursor: default;
 }
 
 .add-task-button {
@@ -1644,6 +1697,20 @@ body.nav-open .sidebar {
 
   .task-form input {
     font-size: 16px;
+  }
+
+  .task-form-main {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .task-form-schedule {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .task-form-schedule input {
+    flex-basis: auto;
   }
 
   .panel {
