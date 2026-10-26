@@ -7,6 +7,7 @@ const authMessage = document.querySelector("#auth-message");
 const authSubmit = document.querySelector("#auth-submit");
 const authSwitch = document.querySelector("#auth-switch");
 const authLogout = document.querySelector("#auth-logout");
+const authProviders = document.querySelector("#auth-providers");
 const accountName = document.querySelector("#account-name");
 const accountState = document.querySelector("#account-state");
 const authPageForm = document.querySelector("#auth-page-form");
@@ -51,7 +52,25 @@ function updateAccountUi() {
     authForm.hidden = Boolean(currentUser);
   }
   if (authTitle) {
-    authTitle.textContent = currentUser ? "Account" : isSignup ? "Create account" : "Sign in";
+    authTitle.textContent = currentUser
+      ? "Your account"
+      : isSignup
+        ? "A little progress starts here."
+        : "Good to see you again.";
+  }
+  const authDescription = document.querySelector("#auth-description");
+  if (authDescription) {
+    authDescription.textContent = currentUser
+      ? "Your account is connected and your study data is syncing."
+      : isSignup
+        ? "Create an account and make this space your own."
+        : "Sign in and pick up right where you left off.";
+  }
+  if (authProviders) {
+    authProviders.hidden = Boolean(currentUser);
+  }
+  if (authSwitch) {
+    authSwitch.textContent = isSignup ? "Already have an account? Sign in" : "New to Studyspace? Create an account";
   }
 }
 
@@ -171,7 +190,7 @@ function configurePageAuth(mode) {
   const signupMode = mode === "signup";
   authPageTitle.textContent = signupMode ? "Create your account" : "Welcome back";
   authPageSubmit.textContent = signupMode ? "Create account" : "Sign in";
-  authPageLink.textContent = signupMode ? "Already have an account? Sign in" : "Need an account? Create one";
+  authPageLink.textContent = signupMode ? "Sign in" : "Create one";
   authPageLink.href = signupMode ? "/login" : "/register";
   authPageMessage.textContent = "";
   authPageMessage.classList.remove("error");
@@ -187,6 +206,10 @@ function bindProviderButtons() {
           method: "POST",
           body: JSON.stringify({ provider }),
         });
+        if (payload.redirectUrl) {
+          window.location.href = payload.redirectUrl;
+          return;
+        }
         setAuthMessage(payload.message || `Continue with ${provider}.`, false, target);
       } catch (error) {
         setAuthMessage(error.message, true, target);
@@ -194,6 +217,17 @@ function bindProviderButtons() {
     });
   });
 }
+
+document.querySelectorAll("[data-password-toggle]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const input = document.getElementById(button.dataset.passwordToggle);
+    if (!input) return;
+    const shouldShow = input.type === "password";
+    input.type = shouldShow ? "text" : "password";
+    button.textContent = shouldShow ? "Hide" : "Show";
+    button.setAttribute("aria-label", `${shouldShow ? "Hide" : "Show"} password`);
+  });
+});
 
 if (authForm) {
   authForm.addEventListener("submit", (event) => handleAuthSubmit(event, isSignup));
@@ -218,7 +252,11 @@ if (authSwitch) {
   authSwitch.addEventListener("click", () => {
     isSignup = !isSignup;
     authPassword.autocomplete = isSignup ? "new-password" : "current-password";
-    authSwitch.textContent = isSignup ? "Already have an account? Sign in" : "Create an account";
+    const passwordLabel = document.querySelector("#auth-password-label");
+    if (passwordLabel) {
+      passwordLabel.textContent = isSignup ? "Create a password" : "Password";
+    }
+    authSwitch.textContent = isSignup ? "Already have an account? Sign in" : "New to Studyspace? Create an account";
     authSubmit.textContent = isSignup ? "Create account" : "Sign in";
     updateAccountUi();
     setAuthMessage("");

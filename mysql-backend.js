@@ -8,6 +8,7 @@ const scryptAsync = promisify(scrypt);
 const MAX_BODY_BYTES = 128 * 1024;
 const SESSION_DAYS = 30;
 const authAttempts = new Map();
+const oauthStates = new Map();
 
 function sendJson(response, status, payload) {
   response.writeHead(status, {
@@ -185,6 +186,17 @@ async function initializeDatabase() {
       CONSTRAINT study_notes_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     ) ENGINE=InnoDB
   `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS oauth_accounts (
+      provider VARCHAR(32) NOT NULL,
+      provider_user_id VARCHAR(255) NOT NULL,
+      user_id CHAR(36) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (provider, provider_user_id),
+      INDEX oauth_accounts_user_idx (user_id),
+      CONSTRAINT oauth_accounts_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB
+  `);
   return pool;
 }
 
@@ -205,6 +217,18 @@ async function createSession(pool, request, response, user) {
   );
   setSessionCookie(request, response, token);
   sendJson(response, 200, { user: { id: user.id, email: user.email } });
+}
+
+async function createSessionRedirect(pool, request, response, user, redirectPath = "/") {
+  const token = randomBytes(32).toString("hex");
+  const tokenHash = hashToken(token);
+  await pool.execute(
+    "INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))",
+    [tokenHash, user.id, SESSION_DAYS],
+  );
+  setSessionCookie(request, response, token);
+  response.writeHead(302, { Location: redirectPath });
+  response.end();
 }
 
 function checkAuthRateLimit(request, response) {
@@ -242,6 +266,168 @@ function toIsoDateTime(value) {
   return `${String(value).replace(" ", "T")}Z`;
 }
 
+function getProviderConfig(providerName) {
+  const provider = providerName.toLowerCase();
+  if (provider === "google") {
+    return {
+      provider,
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      redirectUri: process.env.GOOGLE_REDIRECT_URI || "http://127.0.0.1:3000/api/auth/oauth/google/callback",
+      authorizeUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+      tokenUrl: "https://oauth2.googleapis.com/token",
+      userInfoUrl: "https://openidconnect.googleapis.com/v1/userinfo",
+      scope: "openid email profile",
+    };
+  }
+  if (provider === "apple") {
+    return {
+      provider,
+      clientId: process.env.APPLE_CLIENT_ID || "",
+      clientSecret: process.env.APPLE_CLIENT_SECRET || "",
+      redirectUri: process.env.APPLE_REDIRECT_URI || "http://127.0.0.1:3000/api/auth/oauth/apple/callback",
+      authorizeUrl: "https://appleid.apple.com/auth/authorize",
+      tokenUrl: "https://appleid.apple.com/auth/oauth/token",
+      userInfoUrl: "https://appleid.apple.com/auth/userinfo",
+      scope: "name email",
+    };
+  }
+  return null;
+}
+
+function buildOAuthRedirectUrl(providerName, request) {
+  const provider = getProviderConfig(providerName);
+  if (!provider || !provider.clientId) return null;
+  const state = randomBytes(16).toString("hex");
+  oauthStates.set(state, { provider: provider.provider, createdAt: Date.now() });
+  const params = new URLSearchParams({
+    client_id: provider.clientId,
+    redirect_uri: provider.redirectUri,
+    response_type: "code",
+    scope: provider.scope,
+    state,
+  });
+  if (provider.provider === "google") {
+    params.set("access_type", "offline");
+    params.set("prompt", "consent");
+  }
+  if (provider.provider === "apple") {
+    params.set("response_mode", "form_post");
+  }
+  return `${provider.authorizeUrl}?${params.toString()}`;
+}
+
+async function exchangeOAuthCode(providerName, code, redirectUri) {
+  const provider = getProviderConfig(providerName);
+  if (!provider || !provider.clientId || !provider.clientSecret) {
+    throw new Error(`OAuth is not configured for ${providerName}.`);
+  }
+  const body = new URLSearchParams({
+    code,
+    client_id: provider.clientId,
+    client_secret: provider.clientSecret,
+    redirect_uri: redirectUri,
+    grant_type: "authorization_code",
+  });
+  const response = await fetch(provider.tokenUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString(),
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Unable to exchange token for ${providerName}: ${text}`);
+  }
+  return response.json();
+}
+
+function decodeJwtPayload(token) {
+  const segment = token.split(".")[1];
+  if (!segment) return null;
+  const normalized = segment.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+  return JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
+}
+
+async function getOAuthIdentity(providerName, tokenPayload) {
+  const provider = getProviderConfig(providerName);
+  if (!provider) throw new Error("Unsupported OAuth provider.");
+
+  if (providerName === "google") {
+    const response = await fetch(provider.userInfoUrl, {
+      headers: { Authorization: `Bearer ${tokenPayload.access_token}` },
+    });
+    if (!response.ok) {
+      throw new Error("Google profile lookup failed.");
+    }
+    const user = await response.json();
+    return {
+      providerUserId: user.sub,
+      email: typeof user.email === "string" ? user.email.trim().toLowerCase() : null,
+      name: typeof user.name === "string" ? user.name : user.given_name || "Studyspace learner",
+    };
+  }
+
+  if (providerName === "apple") {
+    const idToken = tokenPayload.id_token;
+    if (!idToken) throw new Error("Apple sign-in did not return an ID token.");
+    const claims = decodeJwtPayload(idToken);
+    return {
+      providerUserId: claims?.sub || `apple-${Date.now()}`,
+      email: typeof claims?.email === "string" ? claims.email.trim().toLowerCase() : null,
+      name: "Studyspace learner",
+    };
+  }
+
+  throw new Error("Unsupported OAuth provider.");
+}
+
+async function findOrCreateOAuthUser(pool, providerName, providerUserId, email) {
+  const normalizedEmail = email ? email.trim().toLowerCase() : `${providerUserId}@${providerName}.oauth`;
+  const [existingUserRows] = await pool.execute(
+    "SELECT id, email FROM users WHERE email = ? LIMIT 1",
+    [normalizedEmail],
+  );
+  let userId = existingUserRows[0]?.id;
+  if (!userId) {
+    const id = randomUUID();
+    const salt = randomBytes(16).toString("hex");
+    const passwordHash = await hashPassword(randomBytes(32).toString("hex"), salt);
+    await pool.execute(
+      "INSERT INTO users (id, email, password_salt, password_hash) VALUES (?, ?, ?, ?)",
+      [id, normalizedEmail, salt, passwordHash],
+    );
+    userId = id;
+  }
+
+  await pool.execute(
+    "INSERT INTO oauth_accounts (provider, provider_user_id, user_id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE user_id = VALUES(user_id)",
+    [providerName, providerUserId, userId],
+  );
+
+  return { id: userId, email: normalizedEmail };
+}
+
+async function finalizeOAuthLogin(pool, request, response, providerName, redirectUri, code, state) {
+  const knownState = oauthStates.get(state);
+  if (!state || !knownState || knownState.provider !== providerName) {
+    sendJson(response, 400, { error: "The sign-in request is invalid or expired." });
+    return;
+  }
+  oauthStates.delete(state);
+
+  try {
+    const tokenPayload = await exchangeOAuthCode(providerName, code, redirectUri);
+    const identity = await getOAuthIdentity(providerName, tokenPayload);
+    const user = await findOrCreateOAuthUser(pool, providerName, identity.providerUserId, identity.email);
+    await createSessionRedirect(pool, request, response, user, "/");
+  } catch (error) {
+    console.error(`OAuth ${providerName} callback failed.`, error);
+    response.writeHead(302, { Location: "/login?oauth_error=1" });
+    response.end();
+  }
+}
+
 async function handleAuth(pool, request, response, pathname) {
   if (request.method === "GET" && pathname === "/api/auth/session") {
     const user = await getSessionUser(pool, request);
@@ -251,6 +437,36 @@ async function handleAuth(pool, request, response, pathname) {
       return;
     }
     sendJson(response, 200, { user });
+    return;
+  }
+
+  if (pathname.startsWith("/api/auth/oauth/")) {
+    if (request.method !== "GET") {
+      response.setHeader("Allow", "GET");
+      sendJson(response, 405, { error: "This OAuth callback must use GET." });
+      return;
+    }
+    const parts = pathname.split("/");
+    const providerName = parts[4];
+    const callbackName = parts[5];
+    if (!providerName || callbackName !== "callback") {
+      sendJson(response, 404, { error: "Unknown OAuth callback." });
+      return;
+    }
+    const url = new URL(request.url, `http://${request.headers.host || "127.0.0.1:3000"}`);
+    const code = url.searchParams.get("code");
+    const state = url.searchParams.get("state");
+    if (!code || !state) {
+      sendJson(response, 400, { error: "The OAuth code or state is missing." });
+      return;
+    }
+    const provider = getProviderConfig(providerName);
+    if (!provider || !provider.clientId || !provider.clientSecret) {
+      sendJson(response, 503, { error: `The ${providerName} OAuth app is not configured on this server.` });
+      return;
+    }
+    const redirectUri = provider.redirectUri;
+    await finalizeOAuthLogin(pool, request, response, providerName, redirectUri, code, state);
     return;
   }
 
@@ -523,4 +739,8 @@ function createMySqlBackend(pool) {
   };
 }
 
-module.exports = { initializeDatabase, createMySqlBackend };
+module.exports = {
+  initializeDatabase,
+  createMySqlBackend,
+  buildOAuthRedirectUrl,
+};

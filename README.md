@@ -28,6 +28,21 @@ Tasks can have an optional scheduled date and time. Studyspace shows in-app remi
 
 Tasks and notes are stored per account in MySQL. If you already have browser-local tasks or notes, signing in imports them to your account. Keep `.env` private; it is excluded by `.gitignore`. The local configuration defaults to the MySQL `root` user for setup convenience; for deployment, use a dedicated least-privilege MySQL account, HTTPS, `COOKIE_SECURE=true`, and provider-appropriate abuse and usage controls.
 
+## OAuth setup (Google and Apple)
+
+The sign-in and registration screens include Google and Apple buttons. To make them work with real providers, add the following values to your local `.env`:
+
+```env
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_REDIRECT_URI=http://127.0.0.1:3000/api/auth/oauth/google/callback
+APPLE_CLIENT_ID=your-apple-service-id
+APPLE_CLIENT_SECRET=your-apple-oauth-secret
+APPLE_REDIRECT_URI=http://127.0.0.1:3000/api/auth/oauth/apple/callback
+```
+
+Then create the matching OAuth app in Google Cloud Console and Apple Developer, and add the same redirect URIs there. The backend will redirect users to the provider, exchange the authorization code for a token, create or reuse the local user record, and then sign the user into Studyspace through the same MySQL session cookie flow used by email/password accounts.
+
 ## Upload to GitHub
 
 The source files and `.env.example` are safe to upload. The real `.env`, dependency folders, editor settings, and local log files are excluded by `.gitignore`. Never replace the placeholder in `.env.example` with a real API key.

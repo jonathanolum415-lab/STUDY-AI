@@ -3,7 +3,7 @@
 const fs = require("node:fs/promises");
 const http = require("node:http");
 const path = require("node:path");
-const { createMySqlBackend, initializeDatabase } = require("./mysql-backend");
+const { createMySqlBackend, initializeDatabase, buildOAuthRedirectUrl } = require("./mysql-backend");
 
 const HOST = process.env.HOST || "127.0.0.1";
 const PORT = Number.parseInt(process.env.PORT || "3000", 10);
@@ -518,9 +518,14 @@ const server = http.createServer(async (request, response) => {
       sendJson(response, 400, { error: "Choose a supported provider: Google or Apple." });
       return;
     }
-    sendJson(response, 200, {
-      message: `The ${provider} sign-in button is ready. Connect a real OAuth provider to complete the flow.`,
-    });
+    const redirectUrl = buildOAuthRedirectUrl(provider, request);
+    if (!redirectUrl) {
+      sendJson(response, 503, {
+        error: `The ${provider} OAuth client is not configured. Add ${provider.toUpperCase()}_CLIENT_ID and ${provider.toUpperCase()}_CLIENT_SECRET to .env.`,
+      });
+      return;
+    }
+    sendJson(response, 200, { redirectUrl, provider });
     return;
   }
   if (pathname.startsWith("/api/auth/") || pathname === "/api/tasks" || pathname.startsWith("/api/tasks/") || pathname === "/api/notes") {

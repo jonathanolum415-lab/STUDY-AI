@@ -1,63 +1,120 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Studyspace — Sign in</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
-    <script src="auth.js" defer></script>
-  </head>
-  <body class="auth-page-body">
-    <div class="auth-page-shell">
-      <div class="auth-page-card">
-        <div class="auth-page-header">
-          <a href="/" class="brand-inline" aria-label="Back to Studyspace home">
-            <span class="brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 32 32" fill="none">
-                <path d="M7 8.5c3.7-.9 6.7-.5 9 1.2v14c-2.3-1.7-5.3-2.1-9-1.2v-14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-                <path d="M25 8.5c-3.7-.9-6.7-.5-9 1.2v14c2.3-1.7 5.3-2.1 9-1.2v-14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-              </svg>
-            </span>
-            <span>studyspace<span class="brand-period">.</span></span>
-          </a>
-          <span class="auth-tag">Welcome back</span>
-        </div>
 
-        <h1 id="auth-page-title">Welcome back</h1>
-        <p class="auth-page-copy">Continue your study streak and pick up where you left off.</p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f7f7fb" />
+  <meta name="description" content="Sign in to your Studyspace account and keep your learning moving." />
+  <title>Sign in — Studyspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="auth.js" defer></script>
+</head>
+
+<body class="auth-page-body" data-auth-mode="login">
+  <main class="auth-page-shell">
+    <aside class="auth-story-panel">
+      <a href="/" class="brand-inline auth-story-brand" aria-label="Studyspace home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M7 8.5c3.7-.9 6.7-.5 9 1.2v14c-2.3-1.7-5.3-2.1-9-1.2v-14Z" stroke="currentColor" stroke-width="2"
+              stroke-linejoin="round" />
+            <path d="M25 8.5c-3.7-.9-6.7-.5-9 1.2v14c2.3-1.7 5.3-2.1 9-1.2v-14Z" stroke="currentColor" stroke-width="2"
+              stroke-linejoin="round" />
+          </svg>
+        </span>
+        <span>studyspace<span class="brand-period">.</span></span>
+      </a>
+      <div class="auth-story-content">
+        <span class="auth-story-kicker"><i></i> YOUR SPACE TO GROW</span>
+        <h2>Small steps.<br />Big <span>ideas.</span></h2>
+        <p>A calmer place to focus, find your rhythm, and make progress that lasts.</p>
+        <div class="auth-quote-card">
+          <span class="auth-quote-spark" aria-hidden="true">✳</span>
+          <p>“The beautiful thing about learning is that no one can take it away from you.”</p>
+          <span class="auth-quote-author">B.B. KING</span>
+        </div>
+      </div>
+      <div class="auth-story-footer"><span>Made for curious minds</span><span>01 <i></i> 03</span></div>
+      <span class="auth-orb auth-orb-one" aria-hidden="true"></span>
+      <span class="auth-orb auth-orb-two" aria-hidden="true"></span>
+    </aside>
+
+    <section class="auth-form-panel" aria-labelledby="auth-page-title">
+      <div class="auth-mobile-brand">
+        <a href="/" class="brand-inline" aria-label="Studyspace home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <path d="M7 8.5c3.7-.9 6.7-.5 9 1.2v14c-2.3-1.7-5.3-2.1-9-1.2v-14Z" stroke="currentColor" stroke-width="2"
+                stroke-linejoin="round" />
+              <path d="M25 8.5c-3.7-.9-6.7-.5-9 1.2v14c2.3-1.7 5.3-2.1 9-1.2v-14Z" stroke="currentColor"
+                stroke-width="2" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span>studyspace<span class="brand-period">.</span></span>
+        </a>
+      </div>
+      <div class="auth-form-inner">
+        <div class="auth-welcome">
+          <span class="auth-tag">WELCOME BACK</span>
+          <h1 id="auth-page-title">Good to see you again.</h1>
+          <p>Sign in and pick up right where you left off.</p>
+        </div>
 
         <div class="auth-provider-grid">
           <button class="auth-provider-button" type="button" data-provider="google">
-            <span class="provider-icon">G</span>
-            Continue with Google
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#4285F4"
+                d="M21.35 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.23a4.47 4.47 0 0 1-1.94 2.93v2.43h3.14c1.84-1.69 2.92-4.18 2.92-7.19Z" />
+              <path fill="#34A853"
+                d="M12 21.75c2.63 0 4.84-.87 6.45-2.36l-3.14-2.43c-.87.58-1.98.93-3.31.93-2.54 0-4.69-1.72-5.46-4.04H3.29v2.51A9.75 9.75 0 0 0 12 21.75Z" />
+              <path fill="#FBBC05" d="M6.54 13.85a5.86 5.86 0 0 1 0-3.7V7.64H3.29a9.75 9.75 0 0 0 0 8.72l3.25-2.51Z" />
+              <path fill="#EA4335"
+                d="M12 6.11c1.43 0 2.72.49 3.73 1.47l2.8-2.8C16.83 3.17 14.62 2.25 12 2.25a9.75 9.75 0 0 0-8.71 5.39l3.25 2.51C7.31 7.83 9.46 6.11 12 6.11Z" />
+            </svg>
+            <span>Continue with Google</span>
           </button>
           <button class="auth-provider-button" type="button" data-provider="apple">
-            <span class="provider-icon"></span>
-            Continue with Apple
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor"
+                d="M16.37 12.36c.02 2.12 1.86 2.83 1.88 2.84-.02.05-.29 1.01-.97 2-.59.85-1.2 1.7-2.16 1.72-.94.02-1.24-.55-2.32-.55s-1.42.53-2.31.57c-.92.03-1.62-.92-2.21-1.77-1.2-1.73-2.12-4.89-.88-7.02a3.41 3.41 0 0 1 2.88-1.75c.9-.02 1.74.61 2.3.61.55 0 1.59-.76 2.67-.65.45.02 1.72.18 2.53 1.36-.06.04-1.51.88-1.49 2.64Zm-1.76-6.83c.48-.58.8-1.38.71-2.18-.69.03-1.52.46-2.01 1.04-.44.5-.82 1.32-.72 2.1.76.06 1.54-.39 2.02-.96Z" />
+            </svg>
+            <span>Continue with Apple</span>
           </button>
         </div>
 
-        <div class="auth-divider"><span>or continue with email</span></div>
+        <div class="auth-divider"><span>or sign in with email</span></div>
 
         <form id="auth-page-form" class="auth-page-form">
-          <label for="auth-page-email">Email</label>
-          <input id="auth-page-email" name="email" type="email" autocomplete="email" maxlength="254" required />
+          <label for="auth-page-email">Email address</label>
+          <input id="auth-page-email" name="email" type="email" placeholder="you@example.com" autocomplete="email"
+            maxlength="254" required />
 
-          <label for="auth-page-password">Password</label>
-          <input id="auth-page-password" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required />
+          <div class="auth-password-label">
+            <label for="auth-page-password">Password</label>
+          </div>
+          <div class="auth-password-wrap">
+            <input id="auth-page-password" name="password" type="password" placeholder="Enter your password"
+              autocomplete="current-password" minlength="8" maxlength="128" required />
+            <button class="password-toggle" type="button" data-password-toggle="auth-page-password"
+              aria-label="Show password">Show</button>
+          </div>
 
           <p id="auth-page-message" class="auth-message" role="status" aria-live="polite"></p>
-
-          <button id="auth-page-submit" class="button button-primary auth-page-submit" type="submit">Sign in</button>
+          <button id="auth-page-submit" class="button button-primary auth-page-submit" type="submit">Sign in <span
+              aria-hidden="true">→</span></button>
         </form>
 
-        <p class="auth-page-switch">
-          Need an account? <a id="auth-page-link" href="/register">Create one</a>
-        </p>
+        <p class="auth-page-switch">New to Studyspace? <a id="auth-page-link" href="/register">Create an account</a></p>
+        <p class="auth-privacy-note"><span aria-hidden="true">⌑</span> Your notes and study progress stay private.</p>
       </div>
-    </div>
-  </body>
+    </section>
+  </main>
+</body>
+
 </html>

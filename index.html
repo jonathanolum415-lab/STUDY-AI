@@ -305,22 +305,66 @@
     </section>
   </div>
   <div class="modal-backdrop" id="auth-modal" aria-hidden="true">
-    <section class="focus-modal auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <section class="focus-modal auth-modal auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
       <button class="modal-close" id="close-auth" aria-label="Close sign-in">×</button>
-      <span class="modal-eyebrow">YOUR STUDYSPACE ACCOUNT</span>
-      <h2 id="auth-title">Sign in</h2>
-      <p class="focus-description">Sign in to sync your study tasks and notes securely.</p>
-      <form id="auth-form" class="auth-form">
-        <label for="auth-email">Email</label>
-        <input id="auth-email" name="email" type="email" autocomplete="email" maxlength="254" required>
-        <label for="auth-password">Password</label>
-        <input id="auth-password" name="password" type="password" autocomplete="current-password" minlength="8"
-          maxlength="128" required>
-        <p id="auth-message" role="status" aria-live="polite"></p>
-        <button class="button button-primary" id="auth-submit" type="submit">Sign in</button>
-      </form>
-      <button class="auth-switch" id="auth-switch" type="button">Create an account</button>
-      <button class="text-button auth-logout" id="auth-logout" type="button" hidden>Sign out</button>
+      <aside class="auth-story-panel auth-dialog-story">
+        <a href="/" class="brand-inline auth-story-brand" aria-label="Studyspace home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <path d="M7 8.5c3.7-.9 6.7-.5 9 1.2v14c-2.3-1.7-5.3-2.1-9-1.2v-14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+              <path d="M25 8.5c-3.7-.9-6.7-.5-9 1.2v14c2.3-1.7 5.3-2.1 9-1.2v-14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span>studyspace<span class="brand-period">.</span></span>
+        </a>
+        <div class="auth-story-content">
+          <span class="auth-story-kicker"><i></i> YOUR SPACE TO GROW</span>
+          <h2>Small steps.<br>Big <span>ideas.</span></h2>
+          <p>A calmer place to focus, find your rhythm, and make progress that lasts.</p>
+          <div class="auth-quote-card">
+            <span class="auth-quote-spark" aria-hidden="true">✳</span>
+            <p>“The beautiful thing about learning is that no one can take it away from you.”</p>
+            <span class="auth-quote-author">B.B. KING</span>
+          </div>
+        </div>
+        <div class="auth-story-footer"><span>Made for curious minds</span><span>01 <i></i> 03</span></div>
+        <span class="auth-orb auth-orb-one" aria-hidden="true"></span>
+        <span class="auth-orb auth-orb-two" aria-hidden="true"></span>
+      </aside>
+      <div class="auth-dialog-panel">
+        <div class="auth-dialog-inner">
+          <span class="auth-tag">YOUR STUDYSPACE ACCOUNT</span>
+          <h1 id="auth-title">Good to see you again.</h1>
+          <p class="auth-dialog-copy" id="auth-description">Sign in and pick up right where you left off.</p>
+          <div class="auth-provider-grid" id="auth-providers">
+            <button class="auth-provider-button" type="button" data-provider="google">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.23a4.47 4.47 0 0 1-1.94 2.93v2.43h3.14c1.84-1.69 2.92-4.18 2.92-7.19Z"/><path fill="#34A853" d="M12 21.75c2.63 0 4.84-.87 6.45-2.36l-3.14-2.43c-.87.58-1.98.93-3.31.93-2.54 0-4.69-1.72-5.46-4.04H3.29v2.51A9.75 9.75 0 0 0 12 21.75Z"/><path fill="#FBBC05" d="M6.54 13.85a5.86 5.86 0 0 1 0-3.7V7.64H3.29a9.75 9.75 0 0 0 0 8.72l3.25-2.51Z"/><path fill="#EA4335" d="M12 6.11c1.43 0 2.72.49 3.73 1.47l2.8-2.8C16.83 3.17 14.62 2.25 12 2.25a9.75 9.75 0 0 0-8.71 5.39l3.25 2.51C7.31 7.83 9.46 6.11 12 6.11Z"/></svg>
+              <span>Google</span>
+            </button>
+            <button class="auth-provider-button" type="button" data-provider="apple">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.37 12.36c.02 2.12 1.86 2.83 1.88 2.84-.02.05-.29 1.01-.97 2-.59.85-1.2 1.7-2.16 1.72-.94.02-1.24-.55-2.32-.55s-1.42.53-2.31.57c-.92.03-1.62-.92-2.21-1.77-1.2-1.73-2.12-4.89-.88-7.02a3.41 3.41 0 0 1 2.88-1.75c.9-.02 1.74.61 2.3.61.55 0 1.59-.76 2.67-.65.45.02 1.72.18 2.53 1.36-.06.04-1.51.88-1.49 2.64Zm-1.76-6.83c.48-.58.8-1.38.71-2.18-.69.03-1.52.46-2.01 1.04-.44.5-.82 1.32-.72 2.1.76.06 1.54-.39 2.02-.96Z"/></svg>
+              <span>Apple</span>
+            </button>
+          </div>
+          <div class="auth-divider"><span>or continue with email</span></div>
+          <form id="auth-form" class="auth-page-form">
+            <label for="auth-email">Email address</label>
+            <input id="auth-email" name="email" type="email" placeholder="you@example.com" autocomplete="email" maxlength="254" required>
+            <div class="auth-password-label">
+              <label for="auth-password" id="auth-password-label">Password</label>
+            </div>
+            <div class="auth-password-wrap">
+              <input id="auth-password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" minlength="8" maxlength="128" required>
+              <button class="password-toggle" type="button" data-password-toggle="auth-password" aria-label="Show password">Show</button>
+            </div>
+            <p id="auth-message" class="auth-message" role="status" aria-live="polite"></p>
+            <button class="button button-primary auth-page-submit" id="auth-submit" type="submit">Sign in <span aria-hidden="true">→</span></button>
+          </form>
+          <button class="auth-switch auth-dialog-switch" id="auth-switch" type="button">New to Studyspace? Create an account</button>
+          <button class="text-button auth-logout" id="auth-logout" type="button" hidden>Sign out</button>
+          <p class="auth-privacy-note"><span aria-hidden="true">⌑</span> Your notes and study progress stay private.</p>
+        </div>
+      </div>
     </section>
   </div>
 </body>
